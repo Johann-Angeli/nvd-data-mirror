@@ -26,7 +26,9 @@ RUN set -e; \
     done
 
 # --- Étape 2 : Image finale NGINX ---
-FROM nginx:alpine
+FROM nginx:alpine-slim
+
+RUN apk update && apk upgrade --no-cache
 
 ARG FEED_VERSION
 
