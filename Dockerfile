@@ -26,7 +26,7 @@ RUN set -e; \
     done
 
 # --- Étape 2 : Image finale NGINX ---
-FROM nginx:alpine as nvd-mock
+FROM nginx:alpine
 
 ARG FEED_VERSION
 
