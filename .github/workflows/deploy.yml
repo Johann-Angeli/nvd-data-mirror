@@ -1,0 +1,36 @@
+name: Build and Deploy NVD Data Image
+
+on:
+  push:
+    branches:
+      - main
+  # Déclenchement automatique toutes les 24 heures (chaque jour à 02:00 UTC)
+  schedule:
+    - cron: '0 2 * * *'
+  # Permet le lancement manuel depuis l'onglet Actions de GitHub
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Configuration Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Connexion à Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build et Push de l'image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/nvd-data-mirror:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/nvd-data-mirror:${{ github.sha }}
