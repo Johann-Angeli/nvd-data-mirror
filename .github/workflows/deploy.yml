@@ -3,10 +3,10 @@ name: Build and Deploy NVD Data Image
 on:
   push:
     branches:
-      - main
-  # Déclenchement automatique toutes les 24 heures (chaque jour à 02:00 UTC)
+      - master
   schedule:
-    - cron: '0 2 * * *'
+    # Déclenchement toutes les 6 heures (à la minute 17 : 00:17, 06:17, 12:17, 18:17 UTC)
+    - cron: '17 */6 * * *'
   # Permet le lancement manuel depuis l'onglet Actions de GitHub
   workflow_dispatch:
 
@@ -16,6 +16,11 @@ jobs:
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
+
+      - name: Génération du tag Horodaté (Date + Heure)
+        id: timestamp
+        # Crée une variable de sortie au format AAAAMMJJ-HHMM (ex: 20260922-1430)
+        run: echo "date=$(date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
 
       - name: Configuration Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -33,4 +38,5 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/nvd-data-mirror:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/nvd-data-mirror:${{ steps.timestamp.outputs.date }}
             ${{ secrets.DOCKERHUB_USERNAME }}/nvd-data-mirror:${{ github.sha }}
