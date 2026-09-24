@@ -14,7 +14,7 @@ A lightweight Docker container serving National Vulnerability Database (NVD) fee
 ### Docker Run
 
 ```bash
-docker run -d -p 8080:80 --name nvd-mirror <your-dockerhub-username>/nvd-data-mirror
+docker run -d -p 8080:8080 --name nvd-mirror arrakis75/nvd-data-mirror
 ```
 
 Once running, the files are accessible over HTTP at http://localhost:8080.
@@ -26,10 +26,10 @@ version: '3.8'
 
 services:
   nvd-mirror:
-    image: <your-dockerhub-username>/nvd-data-mirror
+    image: arrakis75/nvd-data-mirror
     container_name: nvd-mirror
     ports:
-      - "8080:80"
+      - "8080:8080"
     restart: unless-stopped
 ```
 
