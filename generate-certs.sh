@@ -15,7 +15,7 @@ if [ ! -f "${CA_PRIVATE_KEY_FILE}" ]; then
     echo "Missing CA private key (file or env)"
     exit 1
   else
-    echo "${CA_PRIVATE_KEY}" > nginx/certs/ca-private.key
+    echo "${CA_PRIVATE_KEY}" > ${CA_PRIVATE_KEY_FILE}
   fi
 
 fi
@@ -26,7 +26,7 @@ if [ ! -f "${CA_PUBLIC_KEY_FILE}" ]; then
     echo "Missing CA public key (file or env)"
     exit 1
   else
-    echo "${CA_PUBLIC_KEY}" > nginx/certs/ca-public.key
+    echo "${CA_PUBLIC_KEY}" > ${CA_PUBLIC_KEY_FILE}
   fi
 
 fi
