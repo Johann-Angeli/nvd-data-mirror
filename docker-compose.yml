@@ -1,0 +1,67 @@
+name: Dependency-Track
+
+services:
+  apiserver:
+    image: ghcr.io/dependencytrack/apiserver:5.1.1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+    environment:
+      DT_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/dtrack"
+      DT_DATASOURCE_USERNAME: "dtrack"
+      DT_DATASOURCE_PASSWORD: "dtrack"
+    ports:
+    - "127.0.0.1:8080:8080"
+    volumes:
+    - "apiserver-data:/data"
+    # Mount CA chain
+    - "./pki/ca-chain.pem:/tmp/ca-chain.pem:ro"
+    # Force NVD and EPSS redirection to local mirror
+    extra_hosts:
+      - "nvd.nist.gov:host-gateway"
+      - "epss.empiricalsecurity.com:host-gateway"
+    # Import mirror CA chain on startup
+    entrypoint: >
+      /bin/sh -c "
+      keytool -delete -alias vuln-data-mirror-ca-chain -cacerts -storepass changeit 2>/dev/null || true &&
+      keytool -importcert -noprompt -trustcacerts -alias vuln-data-mirror-ca-chain -file /tmp/ca-chain.pem -cacerts -storepass changeit &&
+      exec java $$JAVA_OPTIONS -jar dependency-track-apiserver.jar
+      "
+    restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/dependencytrack/frontend:5.1.1
+    environment:
+      API_BASE_URL: "http://localhost:8080"
+    ports:
+    - "127.0.0.1:8081:8080"
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: "dtrack"
+      POSTGRES_USER: "dtrack"
+      POSTGRES_PASSWORD: "dtrack"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    volumes:
+    - "postgres-data:/var/lib/postgresql"
+
+  # Start the vulnerability data mirror
+  vuln-data-mirror:
+    image: arrakis75/nvd-data-mirror:latest
+    ports:
+      - "127.0.0.1:443:8443"
+    restart: unless-stopped
+
+volumes:
+  apiserver-data: {}
+  postgres-data: {}

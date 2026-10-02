@@ -13,9 +13,18 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
+
+      - name: Generate server certificate
+        env:
+          CA_PRIVATE_KEY: ${{ secrets.CA_PRIVATE_KEY }}
+          CA_PUBLIC_KEY: ${{ secrets.CA_PUBLIC_KEY }}
+        run: |
+          chmod +x generate-certs.sh
+          ./generate-certs.sh
 
       - name: Génération du tag Horodaté (Date + Heure)
         id: timestamp
