@@ -2,6 +2,7 @@
 set -e
 
 CERTIFICATE_FOLDER="nginx/certs"
+CA_CHAIN="pki/ca-chain.pem"
 
 mkdir -p ${CERTIFICATE_FOLDER}
 
@@ -73,6 +74,9 @@ EOF
 openssl x509 -req -in ${CERTIFICATE_FOLDER}/server.csr \
   -CA ${CA_PUBLIC_KEY_FILE} -CAkey ${CA_PRIVATE_KEY_FILE} -CAcreateserial \
   -out ${CERTIFICATE_FOLDER}/public-key.pem -days 365 -sha256 -extfile ${CERTIFICATE_FOLDER}/v3.ext
+
+# Create fullchain certificate
+cat ${CA_CHAIN} >> ${CERTIFICATE_FOLDER}/public-key.pem
 
 # Cleanup temporary files and secrets
 rm -f ${CERTIFICATE_FOLDER}/server.csr ${CERTIFICATE_FOLDER}/crt-req.cnf ${CERTIFICATE_FOLDER}/v3.ext ${CERTIFICATE_FOLDER}/ca-*
