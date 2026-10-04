@@ -60,15 +60,10 @@ ARG EPSS_BASE_URL="https://epss.empiricalsecurity.com/"
 
 WORKDIR /data
 
-COPY nginx/conf.d /data/conf.d
-
 RUN set -e; \
     mkdir -p epss; \
     echo "Downloading EPSS scores..."; \
-    CURRENT_EPSS_SCORES_FILE=$(curl -sI https://epss.empiricalsecurity.com | grep -i "^location:" | awk '{print $2}' | tr -d '\r' | xargs basename); \
-    echo "Found current EPSS scores file ${CURRENT_EPSS_SCORES_FILE}"; \
-    curl -L -o "epss/${CURRENT_EPSS_SCORES_FILE}" https://epss.empiricalsecurity.com || true; \
-    sed -i "s/__CURRENT_EPSS_SCORES_FILE__/${CURRENT_EPSS_SCORES_FILE}/g" /data/conf.d/epss.conf
+    curl -sSL "${EPSS_BASE_URL}" -o "epss/epss_scores-current.csv.gz" || true;
 
 # --- Step 3 : Create final NGINX image (Chainguard Distroless) ---
 FROM cgr.dev/chainguard/nginx:latest
@@ -87,8 +82,6 @@ COPY --chown=65532:65532 --from=nvd-downloader /data/cpe /usr/share/nginx/html/n
 COPY --chown=65532:65532 --from=nvd-downloader /data/vendors /usr/share/nginx/html/nvd/feeds/xml/cve/misc
 
 # Copu EPSS scores file and associated NGINX configuration files
-COPY --chown=65532:65532 --from=epss-downloader /data/conf.d/epss.conf /etc/nginx/conf.d/epss.conf
-
 COPY --chown=65532:65532 nginx/certs /etc/nginx/certs/epss/
 
 COPY --chown=65532:65532 --from=epss-downloader /data/epss /usr/share/nginx/html/epss
